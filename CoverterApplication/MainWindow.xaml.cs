@@ -3,6 +3,7 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using IronXL;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
@@ -56,9 +57,8 @@ namespace CoverterApplication
         }
 
         private void start(object sender, RoutedEventArgs e)
-            
-        {
 
+        {
 
             if (String.IsNullOrEmpty(textBox1.Text) || String.IsNullOrEmpty(textBox2.Text))
             {
@@ -74,9 +74,12 @@ namespace CoverterApplication
 
 
         }
+
+
+
         private void disableButtons()
         {
-            logger.Background = Brushes.Gray;            
+            logger.Background = Brushes.Gray;
             startBtn.IsEnabled = false;
             file1Btn.IsEnabled = false;
             file2Btn.IsEnabled = false;
@@ -86,7 +89,7 @@ namespace CoverterApplication
 
         private void enableButtons()
         {
-            changeBusy();            
+            changeBusy();
             logger.Background = Brushes.Green;
             logger.Foreground = Brushes.White;
             file1Btn.IsEnabled = true;
@@ -108,11 +111,11 @@ namespace CoverterApplication
             );
             Dispatcher.PushFrame(frame);
         }
-         void loading(string message)
+        void loading(string message)
         {
-             logger.Text = message;
+            logger.Text = message;
             DoEvents();
-            
+
 
         }
         public void sql(string command)
@@ -182,78 +185,126 @@ namespace CoverterApplication
 
 
 
-        void writeExcel(string fileName, bool firstRowIsHeader = true)
+        private void writeExcel(string fileName)
         {
-            try
+            WorkBook workbook = WorkBook.Load(textBox1.Text);
+            WorkSheet sheet = workbook.DefaultWorkSheet;
+            System.Data.DataTable dataTable = sheet.ToDataTable(true);
+
+
+            string fileShortName = fileName.Substring(fileName.LastIndexOf("\\") + 1);
+            string tableName = $"Table_{fileShortName.Substring(0, fileShortName.IndexOf("."))}_{DateTime.UtcNow.Second}_{DateTime.UtcNow.Millisecond}";
+            string createCmd = $"if not exists" +
+                $" (select * from sysobjects where name='{tableName}' and xtype='U')" +
+                $"create table {tableName}" +
+                $"(ID INT NOT NULL IDENTITY(1,1) PRIMARY KEY";
+
+            //get columns names and create table
+            for (int i = 0; i < dataTable.Columns.Count; i++)
             {
 
-                using (SpreadsheetDocument doc = SpreadsheetDocument.Open(fileName, false))
+                string columnName = dataTable.Columns[i].ColumnName;
+                columnName = normalizedColumnName(columnName, i);
+                createCmd += $",{columnName} nvarchar(max)";
+            }
+            createCmd += ");";
+            sql(createCmd);
+            loading("Աղյուսակը ստեղծվեց");
+            //end craeting table
+
+
+            //start adding rows
+            int rowIndex = 1;
+            foreach (DataRow row in dataTable.Rows)
+            {
+                string insertCmd = $"Insert Into [converterAPP].[dbo].[{tableName}] VALUES(";
+                for (int i = 0; i < dataTable.Columns.Count; i++)
                 {
-                    string fileShortName = fileName.Substring(fileName.LastIndexOf("\\")+1);
-                    string tableName = $"Table_{fileShortName.Substring(0,fileShortName.IndexOf("."))}_{DateTime.UtcNow.Second}_{DateTime.UtcNow.Millisecond}";
-                    string createCmd = $"if not exists" +
-                        $" (select * from sysobjects where name='{tableName}' and xtype='U')" +
-                        $"create table {tableName}" +
-                        $"(ID INT NOT NULL IDENTITY(1,1) PRIMARY KEY";
-
-                    //Read the first Sheets 
-                    Sheet sheet = doc.WorkbookPart.Workbook.Sheets.GetFirstChild<Sheet>();
-                    Worksheet worksheet = (doc.WorkbookPart.GetPartById(sheet.Id.Value) as WorksheetPart).Worksheet;
-                    Row[] rows = worksheet.GetFirstChild<SheetData>().Descendants<Row>().ToArray();
-                    int counter = 0;
-                    for(int a = 0;a<rows.Length;a++)
-                    {
-                        string insertCmd = $"Insert Into [converterAPP].[dbo].[{tableName}] VALUES(";
-                        counter = counter + 1;
-
-                        if (counter == 1)
-                        {
-                            var j = 1;
-                            foreach (Cell cell in rows[a].Descendants<Cell>())
-                            {
-                                var columnName = firstRowIsHeader ? GetCellValue(doc, cell) : "Field" + j++;
-                                columnName = normalizedColumnName(columnName,j);
-                                createCmd += $",{columnName} nvarchar(max)";
-                            }
-                            createCmd += ");";
-                            Console.WriteLine(createCmd);
-                            sql(createCmd);
-                            loading("Աղյուսակը ստեղծվեց");
-                        }
-                        else
-                        {
-                            int i = 0;
-                            foreach (Cell cell in rows[a].Descendants<Cell>())
-                            {
-                                string cellValue = GetCellValue(doc, cell);
-                                string nullString = "-";
-                                string cmdData = String.IsNullOrEmpty(cellValue) ? nullString : cellValue;
-                                
-                                insertCmd += $"N'{cmdData}',";
-                                Console.Write($" {GetCellValue(doc, cell)} ");
-                                i++;
-                            }
-                            Console.WriteLine();
-                            insertCmd = insertCmd.Remove(insertCmd.Length - 1);
-                            insertCmd += ")";
-
-                            sql(insertCmd);
-                            loading($"Տվյալի ավելացում - {a} | Ֆայլ - {fileShortName} ");
-                        }
-                    }
-                    
+                    string cellValue = row[i].ToString();
+                    cellValue = string.IsNullOrWhiteSpace(cellValue) ? "null" : cellValue;
+                    insertCmd += $"N'{cellValue}',";
 
                 }
+                insertCmd = insertCmd.Remove(insertCmd.Length - 1);
+                insertCmd += ")";
+
+                sql(insertCmd);
+                loading($"Տվյալի ավելացում - {rowIndex} | Ֆայլ - {fileShortName} ");
+                rowIndex++;
             }
-            catch (Exception ex)
-            {
+        }
+        /*  void writeExcel(string fileName, bool firstRowIsHeader = true)
+          {
+              try
+              {
 
-                MessageBox.Show(ex.Message, "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
+                  using (SpreadsheetDocument doc = SpreadsheetDocument.Open(fileName, false))
+                  {
+                      string fileShortName = fileName.Substring(fileName.LastIndexOf("\\")+1);
+                      string tableName = $"Table_{fileShortName.Substring(0,fileShortName.IndexOf("."))}_{DateTime.UtcNow.Second}_{DateTime.UtcNow.Millisecond}";
+                      string createCmd = $"if not exists" +
+                          $" (select * from sysobjects where name='{tableName}' and xtype='U')" +
+                          $"create table {tableName}" +
+                          $"(ID INT NOT NULL IDENTITY(1,1) PRIMARY KEY";
 
-        }//doc write end
+                      //Read the first Sheets 
+                      Sheet sheet = doc.WorkbookPart.Workbook.Sheets.GetFirstChild<Sheet>();
+                      Worksheet worksheet = (doc.WorkbookPart.GetPartById(sheet.Id.Value) as WorksheetPart).Worksheet;
+                      Row[] rows = worksheet.GetFirstChild<SheetData>().Descendants<Row>().ToArray();
+                      int counter = 0;
+                      for(int a = 0;a<rows.Length;a++)
+                      {
+                          string insertCmd = $"Insert Into [converterAPP].[dbo].[{tableName}] VALUES(";
+                          counter = counter + 1;
 
-        private static string GetCellValue(SpreadsheetDocument doc, Cell cell)
+                          if (counter == 1)
+                          {
+                              var j = 1;
+                              foreach (Cell cell in rows[a].Descendants<Cell>())
+                              {
+                                  var columnName = firstRowIsHeader ? GetCellValue(doc, cell) : "Field" + j++;
+                                  columnName = normalizedColumnName(columnName,j);
+                                  createCmd += $",{columnName} nvarchar(max)";
+                              }
+                              createCmd += ");";
+                              Console.WriteLine(createCmd);
+                              sql(createCmd);
+                              loading("Աղյուսակը ստեղծվեց");
+                          }
+                          else
+                          {
+                              int i = 0;
+                              foreach (Cell cell in rows[a].Descendants<Cell>())
+                              {
+                                  string cellValue = GetCellValue(doc, cell);
+                                  string nullString = "-";
+                                  string cmdData = String.IsNullOrEmpty(cellValue) ? nullString : cellValue;
+
+                                  insertCmd += $"N'{cmdData}',";
+                                  Console.Write($" {GetCellValue(doc, cell)} ");
+                                  i++;
+                              }
+                              Console.WriteLine();
+                              insertCmd = insertCmd.Remove(insertCmd.Length - 1);
+                              insertCmd += ")";
+
+                              sql(insertCmd);
+                              loading($"Տվյալի ավելացում - {a} | Ֆայլ - {fileShortName} ");
+                          }
+                      }
+
+
+                  }
+              }
+              catch (Exception ex)
+              {
+
+                  MessageBox.Show(ex.Message, "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Information);
+              }
+
+          }//doc write end*/
+
+        /*private static string GetCellValue(SpreadsheetDocument doc, Cell cell)
         {
             string value = cell?.CellValue?.InnerText;
             
@@ -263,22 +314,22 @@ namespace CoverterApplication
                 return result;
             }
             return value;
-        }
+        }*/
 
-        private string normalizedColumnName(string name,int j)
+        private string normalizedColumnName(string name, int j)
         {
             string normalizedName = name;
             if (String.IsNullOrWhiteSpace(name))
             {
                 return $"Field{j}";
             }
-            if (int.TryParse($"{normalizedName[0]}",out int value))
+            if (int.TryParse($"{normalizedName[0]}", out int value))
             {
                 normalizedName = $"Field_{normalizedName}";
             }
 
-            string[] chars = new string[] {"\n"," ",  ",", ".", "/","\\", "!", "@", "#", "$", "%", "^", "&", "*", "'", "\"", ";","-", "_", "(", ")", ":", "|", "[", "]" };
-            
+            string[] chars = new string[] { "\n", " ", ",", ".", "/", "\\", "!", "@", "#", "$", "%", "^", "&", "*", "'", "\"", ";", "-", "_", "(", ")", ":", "|", "[", "]" };
+
             for (int i = 0; i < chars.Length; i++)
             {
                 if (normalizedName.Contains(chars[i]))
@@ -286,7 +337,7 @@ namespace CoverterApplication
                     normalizedName = normalizedName.Replace(chars[i], "");
                 }
             }
-            
+
             return normalizedName;
         }
 
