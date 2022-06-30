@@ -1,0 +1,57 @@
+﻿<Window x:Class="CoverterApplication.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CoverterApplication"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        mc:Ignorable="d"
+        Title="Excel to Mssql" Height="250" Width="600">
+    <Window.Resources>
+        <Style TargetType="Button">
+            <!--<Setter Property="Margin" Value="20 8 20 8" />-->
+            <Setter Property="Width" Value="100" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Background" Value="Green"></Setter>
+            <Setter Property="Foreground" Value="White"></Setter>
+        </Style>
+
+        <Style  TargetType="TextBlock">
+            <Setter Property="Height" Value="30" />
+        </Style>
+
+        <Style  TargetType="StackPanel">
+            <Setter Property="Margin" Value="30" />
+        </Style>
+    </Window.Resources>
+    <Grid Background="AliceBlue">
+        <Border MinWidth="200" Margin="10" ></Border>
+
+        <StackPanel Margin="30,30,30,10">
+
+            <Grid>
+                <TextBlock x:Name="textBox1" HorizontalAlignment="Left" RenderTransformOrigin="0.504,-0.195" Width="377"><Run Text="Ֆայլ 1"/></TextBlock>
+
+                <Button x:Name="file1Btn" HorizontalAlignment="Right" Content="Ընտրեք Ֆայլը" Tag="1" BorderBrush="Green" Click="file_Click" Width="150" Height="Auto" />
+
+            </Grid>
+            <Grid Margin="0 10 0 0">
+                <TextBlock x:Name="textBox2" HorizontalAlignment="Left" Width="377"><Run Text="Ֆայլ 2"/></TextBlock>
+
+                <Button x:Name="file2Btn" HorizontalAlignment="Right" Content="Ընտրեք Ֆայլը" Tag="2" BorderBrush="Green" Click="file_Click" Width="150" Height="Auto"/>
+
+            </Grid>
+            <Grid>
+                <TextBlock x:Name="logger" HorizontalAlignment="Center" Width="532" Margin="0,27,0,-40" Background="#9C9C9C" Padding="10" Height="Auto"><Run Text=""/></TextBlock>
+            </Grid>
+            <Grid RenderTransformOrigin="0.502,1.817" Height="24" Margin="10 0 0 0">
+                <Button x:Name="startBtn"  Content="Սկսել" Tag="3" Foreground="white" Background="#8E25DA" BorderBrush="#8E25DA" Click="start" Width="Auto" Height="Auto" Margin="-10,45,1,-45" RenderTransformOrigin="0.499,1.264" />
+            </Grid>
+
+        </StackPanel>
+
+
+
+
+    </Grid>
+</Window>
