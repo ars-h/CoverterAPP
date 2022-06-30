@@ -190,9 +190,8 @@ namespace CoverterApplication
             WorkBook workbook = WorkBook.Load(textBox1.Text);
             WorkSheet sheet = workbook.DefaultWorkSheet;
             System.Data.DataTable dataTable = sheet.ToDataTable(true);
-
-
             string fileShortName = fileName.Substring(fileName.LastIndexOf("\\") + 1);
+            fileShortName = fileShortName.Replace(" ", "");
             string tableName = $"Table_{fileShortName.Substring(0, fileShortName.IndexOf("."))}_{DateTime.UtcNow.Second}_{DateTime.UtcNow.Millisecond}";
             string createCmd = $"if not exists" +
                 $" (select * from sysobjects where name='{tableName}' and xtype='U')" +
@@ -205,7 +204,7 @@ namespace CoverterApplication
 
                 string columnName = dataTable.Columns[i].ColumnName;
                 columnName = normalizedColumnName(columnName, i);
-                createCmd += $",{columnName} nvarchar(max)";
+                createCmd += $",[{columnName}] nvarchar(max)";
             }
             createCmd += ");";
             sql(createCmd);
