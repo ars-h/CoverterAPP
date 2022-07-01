@@ -94,6 +94,7 @@ namespace CoverterApplication
             logger.Foreground = Brushes.White;
             file1Btn.IsEnabled = true;
             file2Btn.IsEnabled = true;
+            startBtn.Content = "Սկսել";
             loading("Տվյալները հաջողությամբ ավելացվեցին");
         }
         public void DoEvents()
@@ -187,6 +188,10 @@ namespace CoverterApplication
 
         private void writeExcel(string fileName)
         {
+            try
+            {
+
+            
             WorkBook workbook = WorkBook.Load(textBox1.Text);
             WorkSheet sheet = workbook.DefaultWorkSheet;
             System.Data.DataTable dataTable = sheet.ToDataTable(true);
@@ -219,6 +224,7 @@ namespace CoverterApplication
                 string insertCmd = $"Insert Into [converterAPP].[dbo].[{tableName}] VALUES(";
                 for (int i = 0; i < dataTable.Columns.Count; i++)
                 {
+                    var test = row[i].GetType();
                     string cellValue = row[i].ToString();
                     cellValue = string.IsNullOrWhiteSpace(cellValue) ? "null" : cellValue;
                     insertCmd += $"N'{cellValue}',";
@@ -230,6 +236,12 @@ namespace CoverterApplication
                 sql(insertCmd);
                 loading($"Տվյալի ավելացում - {rowIndex} | Ֆայլ - {fileShortName} ");
                 rowIndex++;
+            }
+            }
+            catch (Exception ex)
+            {
+
+                MessageBox.Show(ex.Message, "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
         /*  void writeExcel(string fileName, bool firstRowIsHeader = true)
