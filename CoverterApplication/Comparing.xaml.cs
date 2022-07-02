@@ -75,35 +75,39 @@ namespace CoverterApplication
 
         private void comparing()
         {
+            string table1Name = ((MainWindow)System.Windows.Application.Current.MainWindow).table1Name;
+            string table2Name = ((MainWindow)System.Windows.Application.Current.MainWindow).table2Name;
+
+
             string table1OnlyQuery = 
                 "SELECT * FROM " +
-                $"[converterAPP].[dbo].[{ ((MainWindow)System.Windows.Application.Current.MainWindow).table1Name}] t1 " +
-                $"LEFT JOIN [converterAPP].[dbo].[{ ((MainWindow)System.Windows.Application.Current.MainWindow).table2Name}] " +
+                $"[converterAPP].[dbo].[{table1Name }] t1 " +
+                $"LEFT JOIN [converterAPP].[dbo].[{table2Name }] " +
                 $"t2 ON t2.{((TextBlock)file2Columns.SelectedItem).Text} = t1.{((TextBlock)file2Columns.SelectedItem).Text}" +
                 $" WHERE t2.{((TextBlock)file2Columns.SelectedItem).Text} IS NULL";
 
 
             string table2OnlyQuery = 
                 $"SELECT * FROM " +
-                $"[converterAPP].[dbo].[{ ((MainWindow)System.Windows.Application.Current.MainWindow).table2Name}]" +
-                $" t2 LEFT JOIN [converterAPP].[dbo].[{ ((MainWindow)System.Windows.Application.Current.MainWindow).table1Name}]" +
+                $"[converterAPP].[dbo].[{table2Name}]" +
+                $" t2 LEFT JOIN [converterAPP].[dbo].[{table1Name}]" +
                 $" t1 ON t1.[{((TextBlock)file1Columns.SelectedItem).Text}] = t2.[{((TextBlock)file2Columns.SelectedItem).Text}]" +
                 $" WHERE t1.[{((TextBlock)file1Columns.SelectedItem).Text}] IS NULL";
 
 
             string innerQuery = 
                 "SELECT * FROM " +
-                $"[converterAPP].[dbo].[{ ((MainWindow)System.Windows.Application.Current.MainWindow).table1Name}] t1 " +
-                $"LEFT JOIN [converterAPP].[dbo].[{ ((MainWindow)System.Windows.Application.Current.MainWindow).table2Name}] " +
+                $"[converterAPP].[dbo].[{table1Name}] t1 " +
+                $"LEFT JOIN [converterAPP].[dbo].[{table2Name}] " +
                 $"t2 ON t2.{((TextBlock)file2Columns.SelectedItem).Text} = t1.{((TextBlock)file2Columns.SelectedItem).Text}" +
                 $" WHERE t2.{((TextBlock)file2Columns.SelectedItem).Text} IS NOT NULL";
 
             Console.WriteLine("T1 Only");
-            ((MainWindow)System.Windows.Application.Current.MainWindow).sql(table1OnlyQuery,1,true);
+            ((MainWindow)System.Windows.Application.Current.MainWindow).compare(table1OnlyQuery,1);
             Console.WriteLine("T2 Only");
-            ((MainWindow)System.Windows.Application.Current.MainWindow).sql(table2OnlyQuery,2,true);
+            ((MainWindow)System.Windows.Application.Current.MainWindow).compare(table2OnlyQuery,2);
             Console.WriteLine("Inner");
-            ((MainWindow)System.Windows.Application.Current.MainWindow).sql(innerQuery,1,true);
+            ((MainWindow)System.Windows.Application.Current.MainWindow).compare(innerQuery,0);
             
         }
     }

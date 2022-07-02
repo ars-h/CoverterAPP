@@ -28,6 +28,8 @@ namespace CoverterApplication
         public List<string> table2Columns;
         public string table1Name;
         public string table2Name;
+
+        public bool isComparing = false;
         public MainWindow()
         {
             InitializeComponent();
@@ -130,41 +132,51 @@ namespace CoverterApplication
 
 
         }
-        public void sql(string command, int tableNumber = 0, bool comparing = false)
+
+        public void compare(string command, int tableNumber = 0)
         {
+            isComparing = true;
             SqlCommand myCommand = new SqlCommand(command, myConn);
 
             try
             {
-                if (comparing)
+                if (myConn.State == ConnectionState.Closed)
                 {
                     myConn.Open();
-                    SqlDataReader reader = myCommand.ExecuteReader();
-                    if (reader.HasRows)
+                }
+                string tableName = tableNumber == 2 ? table2Name : table1Name;
+                string tablePrefix = tableNumber == 0 ? "inner" : "distinct";
+
+                SqlDataReader reader = myCommand.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    int rowIndex = 1;
+                    while (reader.Read()) // построчно считываем данные
                     {
-                        while (reader.Read()) // построчно считываем данные
+
+                        string insertCmd = $"Insert Into [converterAPP].[dbo].[{tablePrefix}_{tableName}] VALUES(";
+
+                        for (int i = 1; tableNumber == 2 ? i <= table2Columns.Count() : i <= table1Columns.Count(); i++)
                         {
-
-
-                            for (int i = 1; tableNumber == 1 ? i <= table1Columns.Count() : i <= table2Columns.Count(); i++)
-                            {
-                                Console.Write(reader.GetValue(i));
-                                Console.Write("   |   ");
-                            }
-
-                            Console.WriteLine();
+                            string value = reader.GetValue(i).ToString();
+                            value = string.IsNullOrWhiteSpace(value) ? "null" : value;
+                            insertCmd += $"N'{value}',";
                         }
 
+                        insertCmd = insertCmd.Remove(insertCmd.Length - 1);
+                        insertCmd += ")";
+
+                        sql(insertCmd);
+                        loading($"Տվյալի ավելացում - {rowIndex} | Աղյուսակ - {tablePrefix}_{tableName} ");
+                        rowIndex++;
                     }
+
                 }
-                else
-                {
-                    myConn.Open();
-                    myCommand.ExecuteNonQuery();
-                }
+
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
+
                 Console.WriteLine("Error");
                 MessageBox.Show(ex.ToString(), "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -175,12 +187,34 @@ namespace CoverterApplication
                     myConn.Close();
                 }
             }
-        }
 
-        private void compare()
+        }
+        public void sql(string command)
         {
+            SqlCommand myCommand = new SqlCommand(command, myConn);
 
+            try
+            {
+                if (myConn.State == ConnectionState.Closed) {
+                    myConn.Open();
+                }
+                myCommand.ExecuteNonQuery();
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error");
+                MessageBox.Show(ex.ToString(), "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            finally
+            {
+                if (myConn.State == ConnectionState.Open && !isComparing)
+                {
+                    myConn.Close();
+                }
+            }
         }
+
 
         private void changeBusy()
         {
@@ -248,14 +282,14 @@ namespace CoverterApplication
                 {
                     table2Name = tableName;
                 }
-                string createCmd = 
+                string createCmd =
                     $"if not exists" +
                     $" (select * from sysobjects where name='{tableName}' and xtype='U')" +
                     $"create table [{tableName}]" +
                     $"(ID INT NOT NULL IDENTITY(1,1) PRIMARY KEY";
 
 
-                string createDistinctCmd = 
+                string createDistinctCmd =
                     $"if not exists" +
                     $" (select * from sysobjects where name='distinct_{tableName}' and xtype='U')" +
                     $"create table [distinct_{tableName}]" +
@@ -293,8 +327,10 @@ namespace CoverterApplication
                     Console.WriteLine(columnName);
                 }
                 createCmd += ");";
+                innerCmd += ");";
+                createDistinctCmd += ");";
                 sql(createCmd);
-                
+
                 if ((bool)doComparing.IsChecked)
                 {
                     sql(createDistinctCmd);
@@ -303,7 +339,7 @@ namespace CoverterApplication
                         sql(innerCmd);
                     }
                 }
-                    loading("Աղյուսակը ստեղծվեց");
+                loading("Աղյուսակը ստեղծվեց");
                 //end craeting tables
 
 
