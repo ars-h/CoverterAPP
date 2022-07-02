@@ -22,14 +22,19 @@ namespace CoverterApplication
     /// </summary>
     public partial class MainWindow : Window
     {
-        SqlConnection myConn = new SqlConnection("Server=(localdb)\\mssqllocaldb;Database=converterAPP;Trusted_Connection=True;MultipleActiveResultSets=true;");
-        SqlConnection databaseConnection = new SqlConnection("Server=(localdb)\\mssqllocaldb;Trusted_Connection=True;MultipleActiveResultSets=true;");
-
+        public SqlConnection myConn = new SqlConnection("Server=(localdb)\\mssqllocaldb;Database=converterAPP;Trusted_Connection=True;MultipleActiveResultSets=true;");
+        public SqlConnection databaseConnection = new SqlConnection("Server=(localdb)\\mssqllocaldb;Trusted_Connection=True;MultipleActiveResultSets=true;");
+        public List<string> table1Columns;
+        public List<string> table2Columns;
+        public string table1Name;
+        public string table2Name;
         public MainWindow()
         {
             InitializeComponent();
-            loading("Ընտրեք 2 Excel ֆայլ և սեղմեք սկսել:");
+            loading("Ընտրեք 2 Excel ֆայլ և սեղմեք սկսել");
             createDatabase();
+            table1Columns = new List<string> { };
+            table2Columns = new List<string> { };
             this.Closing += MainWindow_Closing;
         }
 
@@ -62,14 +67,20 @@ namespace CoverterApplication
 
             if (String.IsNullOrEmpty(textBox1.Text) || String.IsNullOrEmpty(textBox2.Text))
             {
-                MessageBox.Show("Ընտրեք 2 ֆայլ", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Ընտրեք 2 ֆայլ", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
             {
                 disableButtons();
-                writeExcel(textBox1.Text);
-                writeExcel(textBox2.Text);
+                writeExcel(textBox1.Text, 1);
+                writeExcel(textBox2.Text, 2);
                 enableButtons();
+                if ((bool)doComparing.IsChecked)
+                {
+                    Comparing comparingWindow = new Comparing();
+                    comparingWindow.Show();
+                    Hide();
+                }
             }
 
 
@@ -119,14 +130,45 @@ namespace CoverterApplication
 
 
         }
-        public void sql(string command)
+        public void sql(string command, int tableNumber = 0, bool comparing = false)
         {
             SqlCommand myCommand = new SqlCommand(command, myConn);
+
             try
             {
-                myConn.Open();
-                myCommand.ExecuteNonQuery();
-                //MessageBox.Show("DataBase is Created Successfully", "MyProgram", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (comparing)
+                {
+                    myConn.Open();
+                    SqlDataReader reader = myCommand.ExecuteReader();
+                    if (reader.HasRows) 
+                    {
+                        while (reader.Read()) // построчно считываем данные
+                        {
+                            if (tableNumber == 1)
+                            {
+                                for(int i = 0; i < table1Columns.Count(); i++)
+                                {
+
+                                }
+                            }
+                            else if(tableNumber == 2)
+                            {
+
+                            }
+                            Console.WriteLine("------------------");
+                            Console.Write(reader.GetValue(0));
+                            Console.Write("   |   ");
+                            Console.Write(reader.GetValue(1));
+                            Console.WriteLine();
+                        }
+                        
+                    }
+                }
+                else
+                {
+                    myConn.Open();
+                    myCommand.ExecuteNonQuery();
+                }
             }
             catch (System.Exception ex)
             {
@@ -140,6 +182,11 @@ namespace CoverterApplication
                     myConn.Close();
                 }
             }
+        }
+
+        private void compare()
+        {
+
         }
 
         private void changeBusy()
@@ -174,10 +221,12 @@ namespace CoverterApplication
                 if (((System.Windows.Controls.Button)sender).Name == "file1Btn")
                 {
                     textBox1.Text = filename;
+                    file1Btn.Content = "Ընտրել նոր ֆայլ";
                 }
                 else
                 {
                     textBox2.Text = filename;
+                    file2Btn.Content = "Ընտրել նոր ֆայլ";
                 }
 
 
@@ -186,57 +235,75 @@ namespace CoverterApplication
 
 
 
-        private void writeExcel(string fileName)
+        private void writeExcel(string fileName, int tableNumber)
         {
             try
             {
 
-            
-            WorkBook workbook = WorkBook.Load(textBox1.Text);
-            WorkSheet sheet = workbook.DefaultWorkSheet;
-            System.Data.DataTable dataTable = sheet.ToDataTable(true);
-            string fileShortName = fileName.Substring(fileName.LastIndexOf("\\") + 1);
-            fileShortName = fileShortName.Replace(" ", "");
-            string tableName = $"Table_{fileShortName.Substring(0, fileShortName.IndexOf("."))}_{DateTime.UtcNow.Second}_{DateTime.UtcNow.Millisecond}";
-            string createCmd = $"if not exists" +
-                $" (select * from sysobjects where name='{tableName}' and xtype='U')" +
-                $"create table {tableName}" +
-                $"(ID INT NOT NULL IDENTITY(1,1) PRIMARY KEY";
 
-            //get columns names and create table
-            for (int i = 0; i < dataTable.Columns.Count; i++)
-            {
+                WorkBook workbook = WorkBook.Load(fileName);
+                WorkSheet sheet = workbook.DefaultWorkSheet;
+                System.Data.DataTable dataTable = sheet.ToDataTable(true);
+                string fileShortName = fileName.Substring(fileName.LastIndexOf("\\") + 1);
+                fileShortName = fileShortName.Replace(" ", "");
+                string tableName = $"Table_{fileShortName.Substring(0, fileShortName.IndexOf("."))}_{DateTime.UtcNow.Second}_{DateTime.UtcNow.Millisecond}";
+                if (tableNumber == 1)
+                {
+                    table1Name = tableName;
+                }
+                else
+                {
+                    table2Name = tableName;
+                }
+                string createCmd = $"if not exists" +
+                    $" (select * from sysobjects where name='{tableName}' and xtype='U')" +
+                    $"create table [{tableName}]" +
+                    $"(ID INT NOT NULL IDENTITY(1,1) PRIMARY KEY";
 
-                string columnName = dataTable.Columns[i].ColumnName;
-                columnName = normalizedColumnName(columnName, i);
-                createCmd += $",[{columnName}] nvarchar(max)";
-            }
-            createCmd += ");";
-            sql(createCmd);
-            loading("Աղյուսակը ստեղծվեց");
-            //end craeting table
-
-
-            //start adding rows
-            int rowIndex = 1;
-            foreach (DataRow row in dataTable.Rows)
-            {
-                string insertCmd = $"Insert Into [converterAPP].[dbo].[{tableName}] VALUES(";
+                //get columns names and create table
                 for (int i = 0; i < dataTable.Columns.Count; i++)
                 {
-                    var test = row[i].GetType();
-                    string cellValue = row[i].ToString();
-                    cellValue = string.IsNullOrWhiteSpace(cellValue) ? "null" : cellValue;
-                    insertCmd += $"N'{cellValue}',";
 
+                    string columnName = dataTable.Columns[i].ColumnName;
+                    columnName = normalizedColumnName(columnName, i);
+                    createCmd += $",[{columnName}] nvarchar(max)";
+                    if (tableNumber == 1)
+                    {
+                        table1Columns.Add(columnName);
+                    }
+                    else
+                    {
+                        table2Columns.Add(columnName);
+
+                    }
+                    Console.WriteLine(columnName);
                 }
-                insertCmd = insertCmd.Remove(insertCmd.Length - 1);
-                insertCmd += ")";
+                createCmd += ");";
+                sql(createCmd);
+                loading("Աղյուսակը ստեղծվեց");
+                //end craeting table
+                
 
-                sql(insertCmd);
-                loading($"Տվյալի ավելացում - {rowIndex} | Ֆայլ - {fileShortName} ");
-                rowIndex++;
-            }
+                //start adding rows
+                int rowIndex = 1;
+                foreach (DataRow row in dataTable.Rows)
+                {
+                    string insertCmd = $"Insert Into [converterAPP].[dbo].[{tableName}] VALUES(";
+                    for (int i = 0; i < dataTable.Columns.Count; i++)
+                    {
+                        var test = row[i].GetType();
+                        string cellValue = row[i].ToString();
+                        cellValue = string.IsNullOrWhiteSpace(cellValue) ? "null" : cellValue;
+                        insertCmd += $"N'{cellValue}',";
+
+                    }
+                    insertCmd = insertCmd.Remove(insertCmd.Length - 1);
+                    insertCmd += ")";
+
+                    sql(insertCmd);
+                    loading($"Տվյալի ավելացում - {rowIndex} | Ֆայլ - {fileShortName} ");
+                    rowIndex++;
+                }
             }
             catch (Exception ex)
             {
@@ -244,6 +311,40 @@ namespace CoverterApplication
                 MessageBox.Show(ex.Message, "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
+
+
+        private string normalizedColumnName(string name, int j)
+        {
+            string normalizedName = name;
+            if (String.IsNullOrWhiteSpace(name))
+            {
+                return $"Field{j}";
+            }
+            if (int.TryParse($"{normalizedName[0]}", out int value))
+            {
+                normalizedName = $"Field_{normalizedName}";
+            }
+
+            string[] chars = new string[] { "\n", " ", ",", ".", "/", "\\", "!", "@", "#", "$", "%", "^", "&", "*", "'", "\"", ";", "-", "_", "(", ")", ":", "|", "[", "]" };
+
+            for (int i = 0; i < chars.Length; i++)
+            {
+                if (normalizedName.Contains(chars[i]))
+                {
+                    normalizedName = normalizedName.Replace(chars[i], "");
+                }
+            }
+
+            return normalizedName;
+        }
+
+        private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
+        }
+
+
+
         /*  void writeExcel(string fileName, bool firstRowIsHeader = true)
           {
               try
@@ -327,30 +428,7 @@ namespace CoverterApplication
             return value;
         }*/
 
-        private string normalizedColumnName(string name, int j)
-        {
-            string normalizedName = name;
-            if (String.IsNullOrWhiteSpace(name))
-            {
-                return $"Field{j}";
-            }
-            if (int.TryParse($"{normalizedName[0]}", out int value))
-            {
-                normalizedName = $"Field_{normalizedName}";
-            }
 
-            string[] chars = new string[] { "\n", " ", ",", ".", "/", "\\", "!", "@", "#", "$", "%", "^", "&", "*", "'", "\"", ";", "-", "_", "(", ")", ":", "|", "[", "]" };
-
-            for (int i = 0; i < chars.Length; i++)
-            {
-                if (normalizedName.Contains(chars[i]))
-                {
-                    normalizedName = normalizedName.Replace(chars[i], "");
-                }
-            }
-
-            return normalizedName;
-        }
 
     }
 }

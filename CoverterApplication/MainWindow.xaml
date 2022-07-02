@@ -4,9 +4,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CoverterApplication"
-        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="Excel to Mssql" Height="250" MaxHeight="250" MinHeight="250" Width="600" MinWidth="600" MaxWidth="600">
+        Title="Excel to Mssql" Height="250" MinHeight="250" MaxHeight="250"  Width="600" MinWidth="600" MaxWidth="600">
     <Window.Resources>
         <Style TargetType="Button">
             <!--<Setter Property="Margin" Value="20 8 20 8" />-->
@@ -24,31 +23,45 @@
             <Setter Property="Margin" Value="30" />
         </Style>
     </Window.Resources>
-    <Grid Background="AliceBlue">
-        <Border  Margin="10" ></Border>
+    <Grid Background="AliceBlue" Margin="0,0,0,-11" >
+        <Border  Margin="10" >
 
-        <StackPanel Margin="30,30,30,10">
+            <StackPanel Margin="0,0,0,0" >
 
-            <Grid>
-                <TextBlock x:Name="textBox1" HorizontalAlignment="Left" RenderTransformOrigin="0.504,-0.195" Width="377"><Run Text="Ֆայլ 1"/></TextBlock>
+                <Grid>
+                    <TextBlock x:Name="textBox1" HorizontalAlignment="Left" RenderTransformOrigin="0.504,-0.195" Width="377"><Run Text="Ֆայլ 1"/></TextBlock>
 
-                <Button x:Name="file1Btn" HorizontalAlignment="Right" Content="Ընտրեք Ֆայլը" Tag="1" BorderBrush="Green" Click="file_Click" Width="150" Height="Auto" />
+                    <Button x:Name="file1Btn" HorizontalAlignment="Right" Content="Ընտրեք Ֆայլը" Tag="1" BorderBrush="Green" Click="file_Click" Width="150" Height="Auto" />
 
-            </Grid>
-            <Grid Margin="0 10 0 0">
-                <TextBlock x:Name="textBox2" HorizontalAlignment="Left" Width="377"><Run Text="Ֆայլ 2"/></TextBlock>
+                </Grid>
+                <Grid Margin="0 10 0 0">
+                    <TextBlock x:Name="textBox2" HorizontalAlignment="Left" Width="377"><Run Text="Ֆայլ 2"/></TextBlock>
 
-                <Button x:Name="file2Btn" HorizontalAlignment="Right" Content="Ընտրեք Ֆայլը" Tag="2" BorderBrush="Green" Click="file_Click" Width="150" Height="Auto"/>
+                    <Button x:Name="file2Btn" HorizontalAlignment="Right" Content="Ընտրեք Ֆայլը" Tag="2" BorderBrush="Green" Click="file_Click" Width="150" Height="Auto"/>
 
-            </Grid>
-            <Grid>
-                <TextBlock x:Name="logger" HorizontalAlignment="Center" Width="532" Margin="0,27,0,-40" Background="#9C9C9C" Padding="10" Height="Auto"><Run Text=""/></TextBlock>
-            </Grid>
-            <Grid RenderTransformOrigin="0.502,1.817" Height="24" Margin="10 0 0 0">
-                <Button x:Name="startBtn"  Content="Սկսել" Tag="3" Foreground="white" Background="#8E25DA" BorderBrush="#8E25DA" Click="start" Width="Auto" Height="Auto" Margin="-10,45,1,-45" RenderTransformOrigin="0.499,1.264" />
-            </Grid>
+                </Grid>
 
-        </StackPanel>
+                <Grid Height="20" >
+                    <CheckBox IsChecked="True" x:Name="doComparing"    Content="Կատարել համեմատում" HorizontalAlignment="Left" VerticalAlignment="Top" RenderTransformOrigin="0.603,0.778" Margin="0,10,0,-8"/>
+
+                    
+                    
+                </Grid>
+                <Grid >
+                    <TextBlock x:Name="logger" HorizontalAlignment="Center" Width="572"  Background="#9C9C9C" Padding="10" Height="Auto" RenderTransformOrigin="0.507,1.917" Margin="0,24,0,-24" ><Run Text=""/></TextBlock>
+                </Grid>
+                <Grid   Height="41" >
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="339*"/>
+                        <ColumnDefinition Width="233*"/>
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="startBtn"  Content="Սկսել" Tag="3" Foreground="white" Background="#8E25DA" BorderBrush="#8E25DA" Click="start" Width="Auto" Height="Auto" RenderTransformOrigin="0.5,0.902" Margin="0,27,0,-27" Grid.ColumnSpan="2"   />
+                </Grid>
+
+
+            </StackPanel>
+        </Border>
+
 
 
 
