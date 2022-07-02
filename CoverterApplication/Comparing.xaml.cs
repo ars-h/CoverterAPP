@@ -99,11 +99,11 @@ namespace CoverterApplication
                 $" WHERE t2.{((TextBlock)file2Columns.SelectedItem).Text} IS NOT NULL";
 
             Console.WriteLine("T1 Only");
-            ((MainWindow)System.Windows.Application.Current.MainWindow).sql(table1OnlyQuery,0,true);
+            ((MainWindow)System.Windows.Application.Current.MainWindow).sql(table1OnlyQuery,1,true);
             Console.WriteLine("T2 Only");
-            ((MainWindow)System.Windows.Application.Current.MainWindow).sql(table2OnlyQuery,0,true);
+            ((MainWindow)System.Windows.Application.Current.MainWindow).sql(table2OnlyQuery,2,true);
             Console.WriteLine("Inner");
-            ((MainWindow)System.Windows.Application.Current.MainWindow).sql(innerQuery,0,true);
+            ((MainWindow)System.Windows.Application.Current.MainWindow).sql(innerQuery,1,true);
             
         }
     }

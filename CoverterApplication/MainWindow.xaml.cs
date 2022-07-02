@@ -140,28 +140,21 @@ namespace CoverterApplication
                 {
                     myConn.Open();
                     SqlDataReader reader = myCommand.ExecuteReader();
-                    if (reader.HasRows) 
+                    if (reader.HasRows)
                     {
                         while (reader.Read()) // построчно считываем данные
                         {
-                            if (tableNumber == 1)
-                            {
-                                for(int i = 0; i < table1Columns.Count(); i++)
-                                {
 
-                                }
-                            }
-                            else if(tableNumber == 2)
-                            {
 
+                            for (int i = 1; tableNumber == 1 ? i <= table1Columns.Count() : i <= table2Columns.Count(); i++)
+                            {
+                                Console.Write(reader.GetValue(i));
+                                Console.Write("   |   ");
                             }
-                            Console.WriteLine("------------------");
-                            Console.Write(reader.GetValue(0));
-                            Console.Write("   |   ");
-                            Console.Write(reader.GetValue(1));
+
                             Console.WriteLine();
                         }
-                        
+
                     }
                 }
                 else
@@ -255,10 +248,28 @@ namespace CoverterApplication
                 {
                     table2Name = tableName;
                 }
-                string createCmd = $"if not exists" +
+                string createCmd = 
+                    $"if not exists" +
                     $" (select * from sysobjects where name='{tableName}' and xtype='U')" +
                     $"create table [{tableName}]" +
                     $"(ID INT NOT NULL IDENTITY(1,1) PRIMARY KEY";
+
+
+                string createDistinctCmd = 
+                    $"if not exists" +
+                    $" (select * from sysobjects where name='distinct_{tableName}' and xtype='U')" +
+                    $"create table [distinct_{tableName}]" +
+                    $"(ID INT NOT NULL IDENTITY(1,1) PRIMARY KEY";
+
+                string innerCmd =
+                    $"if not exists" +
+                    $" (select * from sysobjects where name='inner_{tableName}' and xtype='U')" +
+                    $"create table [inner_{tableName}]" +
+                    $"(ID INT NOT NULL IDENTITY(1,1) PRIMARY KEY";
+
+
+
+
 
                 //get columns names and create table
                 for (int i = 0; i < dataTable.Columns.Count; i++)
@@ -267,6 +278,9 @@ namespace CoverterApplication
                     string columnName = dataTable.Columns[i].ColumnName;
                     columnName = normalizedColumnName(columnName, i);
                     createCmd += $",[{columnName}] nvarchar(max)";
+                    createDistinctCmd += $",[{columnName}] nvarchar(max)";
+                    innerCmd += $",[{columnName}] nvarchar(max)";
+
                     if (tableNumber == 1)
                     {
                         table1Columns.Add(columnName);
@@ -280,9 +294,18 @@ namespace CoverterApplication
                 }
                 createCmd += ");";
                 sql(createCmd);
-                loading("Աղյուսակը ստեղծվեց");
-                //end craeting table
                 
+                if ((bool)doComparing.IsChecked)
+                {
+                    sql(createDistinctCmd);
+                    if (tableNumber == 1)
+                    {
+                        sql(innerCmd);
+                    }
+                }
+                    loading("Աղյուսակը ստեղծվեց");
+                //end craeting tables
+
 
                 //start adding rows
                 int rowIndex = 1;
