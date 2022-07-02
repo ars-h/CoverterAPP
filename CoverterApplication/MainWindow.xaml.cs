@@ -84,6 +84,13 @@ namespace CoverterApplication
                     comparingWindow.Show();
                     Hide();
                 }
+                else
+                {
+                    table1Columns = new List<string> { };
+                    table2Columns = new List<string> { };
+                    textBox1.Text = "";
+                    textBox2.Text = "";
+                }
             }
 
 

@@ -60,6 +60,12 @@ namespace CoverterApplication
             {
                 disableButtons();
                 comparing();
+
+                ((MainWindow)System.Windows.Application.Current.MainWindow).table1Columns = new List<string> { };
+                ((MainWindow)System.Windows.Application.Current.MainWindow).table2Columns = new List<string> { };
+                ((MainWindow)System.Windows.Application.Current.MainWindow).textBox1.Text = "";
+                ((MainWindow)System.Windows.Application.Current.MainWindow).textBox2.Text = "";
+
                 ((MainWindow)System.Windows.Application.Current.MainWindow).Show();
                 Close();
 
@@ -69,6 +75,8 @@ namespace CoverterApplication
         private void disableButtons() {
             cancelButton.IsEnabled = false;
             compareButton.IsEnabled = false;
+            file1Columns.IsEnabled = false;
+            file2Columns.IsEnabled = false;
             logger.Text = "Սպասեք․․․";
         
         }
