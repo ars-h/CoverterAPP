@@ -75,6 +75,7 @@ namespace CoverterApplication
             {
                 disableButtons();
                 writeExcel(textBox1.Text, 1);
+                loading("2-րդ աղյուսակի ստեղծում...");
                 writeExcel(textBox2.Text, 2);
                 enableButtons();
                 if ((bool)doComparing.IsChecked)
@@ -125,9 +126,16 @@ namespace CoverterApplication
             );
             Dispatcher.PushFrame(frame);
         }
-        void loading(string message)
+        public void loading(string message,int window=1)
         {
-            logger.Text = message;
+            if (window == 1)
+            {
+                logger.Text = message;
+            }
+            else
+            {
+                (System.Windows.Application.Current.Windows.OfType<Comparing>().SingleOrDefault(x => x.IsActive)).logger.Text = message;
+            }
             DoEvents();
 
 
@@ -167,7 +175,7 @@ namespace CoverterApplication
                         insertCmd += ")";
 
                         sql(insertCmd);
-                        loading($"Տվյալի ավելացում - {rowIndex} | Աղյուսակ - {tablePrefix}_{tableName} ");
+                        loading($"Տվյալի ավելացում - {rowIndex} | Աղյուսակ - {tablePrefix}_{tableName} ",2);
                         rowIndex++;
                     }
 

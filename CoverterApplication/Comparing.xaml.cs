@@ -81,10 +81,10 @@ namespace CoverterApplication
 
             string table1OnlyQuery = 
                 "SELECT * FROM " +
-                $"[converterAPP].[dbo].[{table1Name }] t1 " +
+                $"[converterAPP].[dbo].[{table1Name}] t1 " +
                 $"LEFT JOIN [converterAPP].[dbo].[{table2Name }] " +
-                $"t2 ON t2.{((TextBlock)file2Columns.SelectedItem).Text} = t1.{((TextBlock)file2Columns.SelectedItem).Text}" +
-                $" WHERE t2.{((TextBlock)file2Columns.SelectedItem).Text} IS NULL";
+                $"t2 ON t2.[{((TextBlock)file2Columns.SelectedItem).Text}] = t1.[{((TextBlock)file1Columns.SelectedItem).Text}]" +
+                $" WHERE t2.[{((TextBlock)file2Columns.SelectedItem).Text}] IS NULL";
 
 
             string table2OnlyQuery = 
@@ -99,8 +99,8 @@ namespace CoverterApplication
                 "SELECT * FROM " +
                 $"[converterAPP].[dbo].[{table1Name}] t1 " +
                 $"LEFT JOIN [converterAPP].[dbo].[{table2Name}] " +
-                $"t2 ON t2.{((TextBlock)file2Columns.SelectedItem).Text} = t1.{((TextBlock)file2Columns.SelectedItem).Text}" +
-                $" WHERE t2.{((TextBlock)file2Columns.SelectedItem).Text} IS NOT NULL";
+                $"t2 ON t2.[{((TextBlock)file2Columns.SelectedItem).Text}] = t1.[{((TextBlock)file1Columns.SelectedItem).Text}]" +
+                $" WHERE t2.[{((TextBlock)file2Columns.SelectedItem).Text}] IS NOT NULL";
 
             Console.WriteLine("T1 Only");
             ((MainWindow)System.Windows.Application.Current.MainWindow).compare(table1OnlyQuery,1);
@@ -108,7 +108,7 @@ namespace CoverterApplication
             ((MainWindow)System.Windows.Application.Current.MainWindow).compare(table2OnlyQuery,2);
             Console.WriteLine("Inner");
             ((MainWindow)System.Windows.Application.Current.MainWindow).compare(innerQuery,0);
-            
+            ((MainWindow)System.Windows.Application.Current.MainWindow).loading("Համեմատումը հաջողությամբ ավարտվեց");
         }
     }
 }
