@@ -282,6 +282,7 @@ namespace CoverterApplication
             try
             {
 
+                loading($"{tableNumber} Ֆայլի կարդում");
 
                 WorkBook workbook = WorkBook.Load(fileName);
                 WorkSheet sheet = workbook.DefaultWorkSheet;
@@ -329,7 +330,7 @@ namespace CoverterApplication
                     createCmd += $",[{columnName}] nvarchar(max)";
                     createDistinctCmd += $",[{columnName}] nvarchar(max)";
                     innerCmd += $",[{columnName}] nvarchar(max)";
-
+                    loading($"{columnName} - սյունի ավելացում");
                     if (tableNumber == 1)
                     {
                         table1Columns.Add(columnName);
